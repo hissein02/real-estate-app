@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Facture {{ invoice_number }}</title>
+{% if is_pdf %}
+<style>
+  /* Bottom margin reserves the band the footer and page number sit in. */
+  @page {
+    size: A4;
+    margin: 0 0 26mm 0;
+    @bottom-right {
+      content: "Page " counter(page) " / " counter(pages);
+      font-family: DejaVu Sans, Arial, sans-serif;
+      font-size: 9px;
+      color: #94a3b8;
+      margin: 0 56px 10mm 0;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: DejaVu Sans, Arial, sans-serif;
+    font-size: 11px;
+    color: #1f2937;
+    background: #fff;
+    width: 210mm;
+    min-height: 297mm;
+    position: relative;
+  }
+  .pdf-page {
+    padding: 46px 56px 24px 56px;
+    position: relative;
+  }
+  /* Header */
+  .pdf-header { width: 100%; margin-bottom: 24px; }
+  .pdf-header td { vertical-align: top; }
+  .pdf-header-left { width: 55%; }
+  .pdf-header-right { width: 45%; text-align: right; }
+  .pdf-company-name { font-size: 17px; font-weight: 700; color: #031927; margin-bottom: 4px; }
+  .pdf-company-detail { font-size: 12px; color: #6b7280; line-height: 1.6; }
+  .pdf-title { font-size: 20px; font-weight: 700; color: #031927; letter-spacing: 1.5px; margin-bottom: 12px; }
+  .pdf-meta-table { margin-left: auto; }
+  .pdf-meta-label { font-size: 12px; color: #6b7280; padding: 2px 14px 2px 0; }
+  .pdf-meta-value { font-size: 12px; font-weight: 600; color: #111827; padding: 2px 0; text-align: right; }
+  .pdf-divider { border-top: 1px solid #e5e7eb; margin: 20px 0; }
+  /* Bill-to + Period */
+  .pdf-info-row { width: 100%; margin-bottom: 28px; }
+  .pdf-info-row td { vertical-align: top; }
+  .pdf-info-left { width: 55%; }
+  .pdf-info-right { width: 45%; text-align: right; }
+  .pdf-label-sm { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #9ca3af; margin-bottom: 6px; }
+  .pdf-tenant-name { font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 2px; }
+  .pdf-info-sub { font-size: 12px; color: #6b7280; line-height: 1.6; }
+  .pdf-period { font-size: 13px; font-weight: 600; color: #374151; }
+  /* Line items table */
+  .pdf-table { width: 100%; border-collapse: collapse; margin-bottom: 0; }
+  .pdf-table th {
+    padding: 8px 12px 7px 12px;
+    font-size: 9px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-top: 1px solid #031927;
+    border-bottom: 1px solid #031927;
+  }
+  .pdf-table th.center { text-align: center; }
+  .pdf-table th.right { text-align: right; }
+  .pdf-table td { padding: 11px 12px; font-size: 12px; border-bottom: 1px solid #e2e8f0; }
+  /* The last row's rule closes the table, so the totals need none of their own. */
+  .pdf-table tbody tr:last-child td { border-bottom: 1px solid #031927; }
+  .pdf-table td.center { text-align: center; color: #6b7280; }
+  .pdf-table td.right { text-align: right; }
+  .pdf-table td.amount { font-weight: 600; color: #111827; text-align: right; }
+  .pdf-table td.desc { color: #111827; font-weight: 500; }
+  .pdf-table td.price { color: #6b7280; text-align: right; }
+
+  /* Total — right-aligned via text-align (no flex) */
+  /* 12px below vs 14px above: the italic line beneath starts ~2px under the top
+     of its line box, so equal margins read as more space underneath. Measured
+     ink-to-ink, this puts both gaps at 16px. */
+  .pdf-total-wrap { text-align: right; margin: 14px 0 12px 0; }
+  .pdf-total-table {
+    display: inline-table;
+    min-width: 300px;
+    border-collapse: collapse;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+  }
+  .pdf-total-table td { padding: 12px 16px; background: #f1f5f9; }
+  .pdf-total-label { font-size: 15px; font-weight: 700; color: #031927; text-transform: uppercase; letter-spacing: 0.8px; text-align: left; }
+  .pdf-total-value { font-size: 20px; font-weight: 700; color: #031927; text-align: right; }
+  .pdf-words { text-align: right; font-size: 11px; font-style: italic; color: #6b7280; margin-bottom: 28px; }
+  .pdf-words strong { color: #374151; }
+  /* Notes */
+  .pdf-notes { border-top: 1px solid #e2e8f0; padding: 12px 0 0 0; margin-bottom: 22px; }
+  .pdf-notes-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #9ca3af; margin-bottom: 4px; }
+  .pdf-notes-text { font-size: 12px; color: #4b5563; line-height: 1.5; }
+  /* Bank details — full width */
+  .pdf-bank-box { border-top: 1px solid #e2e8f0; padding: 12px 0 0 0; margin-bottom: 22px; width: 100%; }
+  .pdf-bank-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #9ca3af; margin-bottom: 8px; }
+  .pdf-bank-item { font-size: 12px; color: #374151; margin-bottom: 4px; }
+  /* Signatory — right-aligned */
+  .pdf-sig-box { text-align: right; margin-bottom: 16px; }
+  .pdf-sig-img { max-height: 112px; max-width: 320px; margin-top: 8px; object-fit: contain; }
+  .pdf-sig-title { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+  .pdf-sig-name { font-size: 14px; font-weight: 700; color: #111827; }
+  /* Footer — pinned to bottom of A4 page via position:fixed (WeasyPrint treats fixed = relative to the page box) */
+  .pdf-footer {
+    position: fixed;
+    bottom: -20mm;
+    left: 56px;
+    right: 56px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 10px;
+    text-align: center;
+    font-size: 9px;
+    color: #94a3b8;
+    line-height: 1.7;
+  }
+</style>
+{% endif %}
+</head>
+
+{% if is_pdf %}
+{# ═══════════════════ PDF LAYOUT (div-based for WeasyPrint) ═══════════════════ #}
+<body>
+<div class="pdf-page">
+
+  <!-- Header (table-based for reliable WeasyPrint rendering) -->
+  <table class="pdf-header" cellpadding="0" cellspacing="0">
+    <tr>
+      <td class="pdf-header-left">
+        {% if logo_src %}
+          <img src="{{ logo_src }}" alt="Logo" style="max-width:140px; max-height:60px; display:block; margin-bottom:12px;">
+        {% endif %}
+        <div class="pdf-company-name">{{ company_name }}</div>
+        <div class="pdf-company-detail">
+          {{ company_address }}<br>
+          {{ company_city }}
+          {% if company_phone %}<br>{{ company_phone }}{% endif %}
+          {% if company_email %}<br>{{ company_email }}{% endif %}
+        </div>
+      </td>
+      <td class="pdf-header-right">
+        <div class="pdf-title">FACTURE</div>
+        <table class="pdf-meta-table" cellpadding="0" cellspacing="0">
+          <tr><td class="pdf-meta-label">N° Facture</td><td class="pdf-meta-value">{{ invoice_number }}</td></tr>
+          <tr><td class="pdf-meta-label">Date</td><td class="pdf-meta-value">{{ issue_date }}</td></tr>
+          <tr><td class="pdf-meta-label">Échéance</td><td class="pdf-meta-value">{{ due_date }}</td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <div class="pdf-divider"></div>
+
+  <!-- Bill To + Period (table-based) -->
+  <table class="pdf-info-row" cellpadding="0" cellspacing="0">
+    <tr>
+      <td class="pdf-info-left">
+        <div class="pdf-label-sm">Facturé à</div>
+        <div class="pdf-tenant-name">{{ tenant_name }}</div>
+        <div class="pdf-info-sub">
+          {{ property_name }}<br>
+          {{ unit_name }}
+          {% if property_address %}<br>{{ property_address }}{% endif %}{% if property_city %}, {{ property_city }}{% endif %}
+        </div>
+      </td>
+      <td class="pdf-info-right">
+        <div class="pdf-label-sm">Période</div>
+        <div class="pdf-period">{{ period_start }} — {{ period_end }}</div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Line items -->
+  <table class="pdf-table">
+    <thead>
+      <tr>
+        <th style="width:44%; text-align:left;">Description</th>
+        <th class="center" style="width:8%;">Qté</th>
+        <th class="right" style="width:24%;">Prix Unitaire ({{ currency }})</th>
+        <th class="right" style="width:24%;">Montant ({{ currency }})</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for line in lines %}
+      <tr>
+        <td class="desc">{{ line.description }}</td>
+        <td class="center">{{ line.quantity }}</td>
+        <td class="price">{{ line.unit_price }}</td>
+        <td class="amount">{{ line.amount }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4" style="text-align:center; color:#9ca3af; padding:20px;">Aucune ligne</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Total -->
+  <div class="pdf-total-wrap">
+    <table class="pdf-total-table">
+      <tr>
+        <td class="pdf-total-label">Total</td>
+        <td class="pdf-total-value">{{ total_amount }} {{ currency }}</td>
+      </tr>
+    </table>
+  </div>
+  {% if total_in_words %}
+  <div class="pdf-words">Arrêtée à la somme de : <strong>{{ total_in_words }} {{ currency }}</strong></div>
+  {% endif %}
+
+  <!-- Notes -->
+  {% if notes %}
+  <div class="pdf-notes">
+    <div class="pdf-notes-label">Notes</div>
+    <div class="pdf-notes-text">{{ notes }}</div>
+  </div>
+  {% endif %}
+
+  <!-- Bank details (full width) -->
+  {% if company_bank_accounts %}
+  <div class="pdf-bank-box">
+    <div class="pdf-bank-label">Coordonnées bancaires</div>
+    {% for bank in company_bank_accounts %}
+    <div class="pdf-bank-item"><strong>{{ bank.bank_name }}</strong> — {{ bank.account_number }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Signatory (right-aligned, sits just above footer) -->
+  {% if company_signatory_title %}
+  <div class="pdf-sig-box">
+    <div class="pdf-sig-title">{{ company_signatory_title }}</div>
+    {% if company_signatory_name %}<div class="pdf-sig-name">{{ company_signatory_name }}</div>{% endif %}
+    {% if company_signatory_image %}<div><img class="pdf-sig-img" src="{{ company_signatory_image }}" alt="Signature"></div>{% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Footer (pinned to bottom of A4) -->
+  <div class="pdf-footer">
+    <strong>{{ company_name }}</strong>{% if company_address %} — {{ company_address }}{% endif %}{% if company_city %}, {{ company_city }}{% endif %}<br>
+    {% if company_phone %}{{ company_phone }}{% endif %}{% if company_phone and company_email %} &middot; {% endif %}{% if company_email %}{{ company_email }}{% endif %}<br>
+    {% if company_rccm or company_nif %}
+    {% if company_rccm %}RCCM : {{ company_rccm }}{% endif %}{% if company_rccm and company_nif %} &middot; {% endif %}{% if company_nif %}NIF : {{ company_nif }}{% endif %}
+    {% endif %}
+  </div>
+
+</div>
+</body>
+
+{% else %}
+{# ═══════════════════ EMAIL LAYOUT (table-based, inline CSS) ═══════════════════ #}
+<body style="margin:0; padding:0; background-color:#f3f4f6; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%;">
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f3f4f6;">
+  <tr>
+    <td align="center" style="padding:32px 16px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px; width:100%; background-color:#ffffff; border:1px solid #e2e8f0;">
+
+        <!-- Header -->
+        <tr>
+          <td style="padding:32px 40px 24px 40px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td style="vertical-align:top; width:55%;">
+                  {% if logo_src %}
+                    <img src="{{ logo_src }}" alt="Logo" style="max-width:120px; max-height:50px; display:block; margin-bottom:12px;">
+                  {% endif %}
+                  <div style="font-size:16px; font-weight:700; color:#111827; margin-bottom:4px;">{{ company_name }}</div>
+                  <div style="font-size:11px; color:#6b7280; line-height:1.6;">
+                    {{ company_address }}<br>{{ company_city }}
+                    {% if company_phone %}<br>{{ company_phone }}{% endif %}
+                    {% if company_email %}<br>{{ company_email }}{% endif %}
+                  </div>
+                </td>
+                <td style="vertical-align:top; text-align:right; width:45%;">
+                  <div style="font-size:19px; font-weight:700; color:#031927; letter-spacing:1.5px; margin-bottom:8px;">FACTURE</div>
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-left:auto;">
+                    <tr><td style="font-size:11px; color:#6b7280; padding:3px 12px 3px 0;">N° Facture</td><td style="font-size:11px; font-weight:600; color:#111827; padding:3px 0; text-align:right;">{{ invoice_number }}</td></tr>
+                    <tr><td style="font-size:11px; color:#6b7280; padding:3px 12px 3px 0;">Date</td><td style="font-size:11px; font-weight:600; color:#111827; padding:3px 0; text-align:right;">{{ issue_date }}</td></tr>
+                    <tr><td style="font-size:11px; color:#6b7280; padding:3px 12px 3px 0;">Échéance</td><td style="font-size:11px; font-weight:600; color:#111827; padding:3px 0; text-align:right;">{{ due_date }}</td></tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Divider -->
+        <tr><td style="padding:0 40px;"><div style="border-top:1px solid #e5e7eb;">&nbsp;</div></td></tr>
+
+        <!-- Bill To + Period -->
+        <tr>
+          <td style="padding:20px 40px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td style="vertical-align:top; width:55%;">
+                  <div style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#9ca3af; margin-bottom:6px;">Facturé à</div>
+                  <div style="font-size:14px; font-weight:700; color:#111827; margin-bottom:2px;">{{ tenant_name }}</div>
+                  <div style="font-size:11px; color:#6b7280; line-height:1.6;">
+                    {{ property_name }}<br>{{ unit_name }}
+                    {% if property_address %}<br>{{ property_address }}{% endif %}{% if property_city %}, {{ property_city }}{% endif %}
+                  </div>
+                </td>
+                <td style="vertical-align:top; text-align:right; width:45%;">
+                  <div style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#9ca3af; margin-bottom:6px;">Période</div>
+                  <div style="font-size:12px; font-weight:600; color:#374151;">{{ period_start }} — {{ period_end }}</div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Line items -->
+        <tr>
+          <td style="padding:8px 40px 24px 40px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+              <tr>
+                <td style="padding:8px 12px 7px 12px; font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.8px; border-top:1px solid #031927; border-bottom:1px solid #031927; width:44%;">Description</td>
+                <td style="padding:8px 8px 7px 8px; font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.8px; text-align:center; border-top:1px solid #031927; border-bottom:1px solid #031927; width:8%;">Qté</td>
+                <td style="padding:8px 8px 7px 8px; font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.8px; text-align:right; border-top:1px solid #031927; border-bottom:1px solid #031927; width:24%;">Prix Unit. ({{ currency }})</td>
+                <td style="padding:8px 12px 7px 12px; font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.8px; text-align:right; border-top:1px solid #031927; border-bottom:1px solid #031927; width:24%;">Montant ({{ currency }})</td>
+              </tr>
+              {% for line in lines %}
+              {% if forloop.last %}{% with rule="#031927" %}
+              <tr>
+                <td style="padding:11px 12px; font-size:11px; color:#111827; font-weight:500; border-bottom:1px solid {{ rule }};">{{ line.description }}</td>
+                <td style="padding:11px 8px; font-size:11px; color:#6b7280; text-align:center; border-bottom:1px solid {{ rule }};">{{ line.quantity }}</td>
+                <td style="padding:11px 8px; font-size:11px; color:#6b7280; text-align:right; border-bottom:1px solid {{ rule }};">{{ line.unit_price }}</td>
+                <td style="padding:11px 12px; font-size:11px; color:#111827; font-weight:600; text-align:right; border-bottom:1px solid {{ rule }};">{{ line.amount }}</td>
+              </tr>
+              {% endwith %}{% else %}
+              <tr>
+                <td style="padding:11px 12px; font-size:11px; color:#111827; font-weight:500; border-bottom:1px solid #e2e8f0;">{{ line.description }}</td>
+                <td style="padding:11px 8px; font-size:11px; color:#6b7280; text-align:center; border-bottom:1px solid #e2e8f0;">{{ line.quantity }}</td>
+                <td style="padding:11px 8px; font-size:11px; color:#6b7280; text-align:right; border-bottom:1px solid #e2e8f0;">{{ line.unit_price }}</td>
+                <td style="padding:11px 12px; font-size:11px; color:#111827; font-weight:600; text-align:right; border-bottom:1px solid #e2e8f0;">{{ line.amount }}</td>
+              </tr>
+              {% endif %}
+              {% empty %}
+              <tr><td colspan="4" style="padding:20px 12px; text-align:center; font-size:11px; color:#9ca3af;">Aucune ligne</td></tr>
+              {% endfor %}
+            </table>
+          </td>
+        </tr>
+
+        <!-- Total -->
+        <tr>
+          <td style="padding:0 40px 8px 40px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-left:auto; min-width:280px; border-collapse:collapse;">
+              <tr>
+                <td bgcolor="#f1f5f9" style="padding:12px 16px; font-size:14px; font-weight:700; color:#031927; text-transform:uppercase; letter-spacing:0.8px; text-align:left; background-color:#f1f5f9; border-top:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; border-left:1px solid #e2e8f0;">Total</td>
+                <td bgcolor="#f1f5f9" style="padding:12px 16px; font-size:19px; font-weight:700; color:#031927; text-align:right; background-color:#f1f5f9; border-top:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; border-right:1px solid #e2e8f0;">{{ total_amount }} {{ currency }}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        {% if total_in_words %}
+        <tr>
+          <td style="padding:0 40px 24px 40px;">
+            <div style="text-align:right; font-size:10px; font-style:italic; color:#6b7280;">
+              Arrêtée à la somme de : <strong style="color:#374151;">{{ total_in_words }} {{ currency }}</strong>
+            </div>
+          </td>
+        </tr>
+        {% endif %}
+
+        {% if notes %}
+        <tr>
+          <td style="padding:0 40px 24px 40px;">
+            <div style="border-top:1px solid #e2e8f0; padding:12px 0 0 0;">
+              <div style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#9ca3af; margin-bottom:4px;">Notes</div>
+              <div style="font-size:11px; color:#4b5563; line-height:1.5;">{{ notes }}</div>
+            </div>
+          </td>
+        </tr>
+        {% endif %}
+
+        <!-- Bank details (full width) -->
+        {% if company_bank_accounts %}
+        <tr>
+          <td style="padding:0 40px 16px 40px;">
+            <div style="border-top:1px solid #e2e8f0; padding:12px 0 0 0;">
+              <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#9ca3af; margin-bottom:8px;">Coordonnées bancaires</div>
+              {% for bank in company_bank_accounts %}
+              <div style="font-size:11px; color:#374151; margin-bottom:4px;"><strong>{{ bank.bank_name }}</strong> — {{ bank.account_number }}</div>
+              {% endfor %}
+            </div>
+          </td>
+        </tr>
+        {% endif %}
+
+        <!-- Signatory (right-aligned) -->
+        {% if company_signatory_title %}
+        <tr>
+          <td style="padding:0 40px 16px 40px; text-align:right;">
+            <div style="font-size:11px; color:#6b7280; margin-bottom:4px;">{{ company_signatory_title }}</div>
+            {% if company_signatory_name %}<div style="font-size:13px; font-weight:700; color:#111827; margin-bottom:4px;">{{ company_signatory_name }}</div>{% endif %}
+            {% if company_signatory_image %}<div><img src="{{ company_signatory_image }}" alt="Signature" style="max-height:112px;max-width:320px;object-fit:contain;"></div>{% endif %}
+          </td>
+        </tr>
+        {% endif %}
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:16px 40px 24px 40px; border-top:1px solid #e5e7eb;">
+            <div style="text-align:center; font-size:10px; color:#9ca3af; line-height:1.8;">
+              <strong>{{ company_name }}</strong>{% if company_address %} — {{ company_address }}{% endif %}{% if company_city %}, {{ company_city }}{% endif %}<br>
+              {% if company_phone %}{{ company_phone }}{% endif %}{% if company_phone and company_email %} &middot; {% endif %}{% if company_email %}{{ company_email }}{% endif %}<br>
+              {% if company_rccm or company_nif %}
+              {% if company_rccm %}RCCM : {{ company_rccm }}{% endif %}{% if company_rccm and company_nif %} &middot; {% endif %}{% if company_nif %}NIF : {{ company_nif }}{% endif %}<br>
+              {% endif %}
+              Merci pour votre confiance.
+            </div>
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+{% endif %}
+</html>

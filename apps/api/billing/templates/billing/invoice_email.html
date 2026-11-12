@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Facture {{ invoice_number }}</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+</head>
+<body style="margin:0; padding:0; background-color:#f3f4f6; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%;">
+
+<!-- Wrapper -->
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f3f4f6;">
+  <tr>
+    <td align="center" style="padding:32px 16px;">
+
+      <!-- Main container -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px; width:100%; background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+
+        <!-- Accent bar -->
+        <tr>
+          <td style="height:6px; background-color:#1e3a5f; font-size:0; line-height:0;">&nbsp;</td>
+        </tr>
+
+        <!-- Header: Company + Invoice info -->
+        <tr>
+          <td style="padding:32px 40px 24px 40px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <!-- Company info (left) -->
+                <td style="vertical-align:top; width:55%;">
+                  {% if company_logo_url %}
+                    <img src="{{ company_logo_url }}" alt="Logo" style="max-width:120px; max-height:50px; display:block; margin-bottom:12px;" />
+                  {% else %}
+                    <div style="width:44px; height:44px; background-color:#e0e7ff; border-radius:8px; text-align:center; line-height:44px; font-size:20px; margin-bottom:12px;">&#127968;</div>
+                  {% endif %}
+                  <div style="font-size:16px; font-weight:700; color:#111827; margin-bottom:4px;">{{ company_name }}</div>
+                  <div style="font-size:11px; color:#6b7280; line-height:1.6;">
+                    {{ company_address }}<br>
+                    {{ company_city }}
+                    {% if company_phone %}<br>{{ company_phone }}{% endif %}
+                    {% if company_email %}<br>{{ company_email }}{% endif %}
+                  </div>
+                </td>
+
+                <!-- Invoice info (right) -->
+                <td style="vertical-align:top; text-align:right; width:45%;">
+                  <div style="font-size:28px; font-weight:800; color:#1e3a5f; letter-spacing:2px; margin-bottom:8px;">FACTURE</div>
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-left:auto;">
+                    <tr>
+                      <td style="font-size:11px; color:#6b7280; padding:3px 12px 3px 0; text-align:left;">N° Facture</td>
+                      <td style="font-size:11px; font-weight:600; color:#111827; padding:3px 0; text-align:right;">{{ invoice_number }}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-size:11px; color:#6b7280; padding:3px 12px 3px 0; text-align:left;">Date</td>
+                      <td style="font-size:11px; font-weight:600; color:#111827; padding:3px 0; text-align:right;">{{ issue_date }}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-size:11px; color:#6b7280; padding:3px 12px 3px 0; text-align:left;">Échéance</td>
+                      <td style="font-size:11px; font-weight:600; color:#111827; padding:3px 0; text-align:right;">{{ due_date }}</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Divider -->
+        <tr>
+          <td style="padding:0 40px;">
+            <div style="border-top:1px solid #e5e7eb; height:0; font-size:0; line-height:0;">&nbsp;</div>
+          </td>
+        </tr>
+
+        <!-- Bill To -->
+        <tr>
+          <td style="padding:20px 40px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td style="vertical-align:top; width:55%;">
+                  <div style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#9ca3af; margin-bottom:6px;">Facturé à</div>
+                  <div style="font-size:14px; font-weight:700; color:#111827; margin-bottom:2px;">{{ tenant_name }}</div>
+                  <div style="font-size:11px; color:#6b7280; line-height:1.6;">
+                    {{ unit_name }}<br>
+                    {{ property_name }}
+                    {% if property_address %}<br>{{ property_address }}{% endif %}
+                    {% if property_city %}- {{ property_city }}{% endif %}
+                  </div>
+                </td>
+                <td style="vertical-align:top; text-align:right; width:45%;">
+                  <div style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#9ca3af; margin-bottom:6px;">Période</div>
+                  <div style="font-size:12px; font-weight:600; color:#374151;">{{ period_start }} — {{ period_end }}</div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Line items table -->
+        <tr>
+          <td style="padding:8px 40px 24px 40px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+              <!-- Table header -->
+              <tr style="background-color:#1e3a5f;">
+                <td style="padding:10px 12px; font-size:10px; font-weight:700; color:#ffffff; text-transform:uppercase; letter-spacing:0.5px; border-radius:4px 0 0 0; width:70%;">Description</td>
+                <td style="padding:10px 12px; font-size:10px; font-weight:700; color:#ffffff; text-transform:uppercase; letter-spacing:0.5px; text-align:right; border-radius:0 4px 0 0; width:30%;">Montant</td>
+              </tr>
+              <!-- Line items -->
+              {% for line in lines %}
+              <tr style="{% if forloop.counter|divisibleby:2 %}background-color:#f9fafb;{% endif %}">
+                <td style="padding:10px 12px; font-size:11px; color:#111827; font-weight:500; border-bottom:1px solid #f3f4f6;">
+                  {{ line.description }}
+                </td>
+                <td style="padding:10px 12px; font-size:11px; color:#111827; font-weight:600; text-align:right; border-bottom:1px solid #f3f4f6;">{{ line.amount }} {{ currency }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="2" style="padding:20px 12px; text-align:center; font-size:11px; color:#9ca3af;">Aucune ligne</td>
+              </tr>
+              {% endfor %}
+            </table>
+          </td>
+        </tr>
+
+        <!-- Subtotal / Total -->
+        <tr>
+          <td style="padding:0 40px 24px 40px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-left:auto; min-width:240px;">
+              {% if lines|length > 1 %}
+              <tr>
+                <td style="padding:6px 16px; font-size:12px; color:#6b7280; text-align:right;">Sous-total</td>
+                <td style="padding:6px 0; font-size:12px; color:#374151; text-align:right; font-weight:500;">{{ total_amount }} {{ currency }}</td>
+              </tr>
+              {% endif %}
+              <tr>
+                <td colspan="2" style="padding:8px 0 0 0;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#1e3a5f; border-radius:6px;">
+                    <tr>
+                      <td style="padding:12px 20px; font-size:12px; font-weight:700; color:#93c5fd; text-transform:uppercase; letter-spacing:1px;">Total</td>
+                      <td style="padding:12px 20px; font-size:18px; font-weight:800; color:#ffffff; text-align:right;">{{ total_amount }} {{ currency }}</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Notes -->
+        {% if notes %}
+        <tr>
+          <td style="padding:0 40px 24px 40px;">
+            <div style="background-color:#f9fafb; border-radius:6px; padding:14px 16px;">
+              <div style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#9ca3af; margin-bottom:4px;">Notes</div>
+              <div style="font-size:11px; color:#4b5563; line-height:1.5;">{{ notes }}</div>
+            </div>
+          </td>
+        </tr>
+        {% endif %}
+
+        <!-- Bank Details + Signatory -->
+        {% if company_bank_accounts or company_signatory %}
+        <tr>
+          <td style="padding:0 40px 24px 40px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                {% if company_bank_accounts %}
+                <td style="vertical-align:top; width:{% if company_signatory %}40%{% else %}100%{% endif %}; padding-right:{% if company_signatory %}12px{% else %}0{% endif %};">
+                  <div style="border:1px solid #e5e7eb; border-radius:6px; padding:16px;">
+                    <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#9ca3af; margin-bottom:8px;">Coordonnées bancaires</div>
+                    {% for bank in company_bank_accounts %}
+                    <div style="font-size:11px; color:#374151; margin-bottom:{% if not forloop.last %}4px{% else %}0{% endif %};">
+                      <strong>{{ bank.bank_name }}</strong> — {{ bank.account_number }}
+                    </div>
+                    {% endfor %}
+                  </div>
+                </td>
+                {% endif %}
+
+                {% if company_signatory %}
+                <td style="vertical-align:top; width:{% if company_bank_accounts %}60%{% else %}100%{% endif %}; padding-left:{% if company_bank_accounts %}12px{% else %}0{% endif %};">
+                  <div style="border:1px solid #e5e7eb; border-radius:6px; padding:20px; text-align:center; min-height:100px;">
+                    <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#9ca3af; margin-bottom:8px;">Signature</div>
+                    <div style="font-size:12px; font-weight:600; color:#374151; margin-top:40px;">{{ company_signatory }}</div>
+                  </div>
+                </td>
+                {% endif %}
+              </tr>
+            </table>
+          </td>
+        </tr>
+        {% endif %}
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:16px 40px 24px 40px; border-top:1px solid #e5e7eb;">
+            <div style="text-align:center; font-size:10px; color:#9ca3af; line-height:1.8;">
+              <strong>{{ company_name }}</strong>{% if company_address %} — {{ company_address }}{% endif %}{% if company_city %}, {{ company_city }}{% endif %}<br>
+              {% if company_phone %}{{ company_phone }}{% endif %}{% if company_phone and company_email %} &middot; {% endif %}{% if company_email %}{{ company_email }}{% endif %}<br>
+              {% if company_rccm or company_nif %}
+              {% if company_rccm %}RCCM : {{ company_rccm }}{% endif %}{% if company_rccm and company_nif %} &middot; {% endif %}{% if company_nif %}NIF : {{ company_nif }}{% endif %}<br>
+              {% endif %}
+              Merci pour votre confiance.
+            </div>
+          </td>
+        </tr>
+
+      </table>
+      <!-- /Main container -->
+
+    </td>
+  </tr>
+</table>
+<!-- /Wrapper -->
+
+</body>
+</html>

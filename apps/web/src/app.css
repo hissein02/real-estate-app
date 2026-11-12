@@ -1,0 +1,132 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design system
+ * -------------
+ * Containers (cards, tables, panels, page headers) are square: radius 0.
+ * Interactive controls carry a 2px hairline radius so they read as crisp
+ * rather than accidental. Elevation comes from borders, not shadows —
+ * a shadow is reserved for things that genuinely float above the page
+ * (drawer, modal). Nothing else casts one.
+ */
+:root {
+  --radius-control: 2px;
+  --radius-container: 0px;
+
+  --line: #e2e8f0;
+  --line-strong: #cbd5e1;
+  --ink: #0f172a;
+  --text: #1e293b;
+  --muted: #64748b;
+  --faint: #94a3b8;
+}
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+  html {
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Keyboard focus stays visible; mouse clicks don't leave a ring behind. */
+  :focus-visible {
+    outline: 2px solid theme('colors.primary.500');
+    outline-offset: 1px;
+  }
+}
+
+@layer components {
+  /* ── Buttons ─────────────────────────────────────────────────
+     Fixed height and whitespace-nowrap: a long label (French
+     "Enregistrer les modifications") must never wrap to two lines
+     and change the height of the row it sits in. */
+  .btn-base {
+    @apply inline-flex h-9 items-center justify-center gap-2 whitespace-nowrap px-3.5
+           text-sm font-medium transition-colors
+           disabled:cursor-not-allowed disabled:opacity-50;
+    border-radius: var(--radius-control);
+  }
+  .btn-primary {
+    @apply btn-base bg-primary-600 text-white hover:bg-primary-700;
+  }
+  .btn-secondary {
+    @apply btn-base border border-gray-300 bg-white text-gray-700 hover:bg-gray-50;
+  }
+  .btn-danger {
+    @apply btn-base bg-red-700 text-white hover:bg-red-800;
+  }
+  /* Destructive but not the primary action on the screen. */
+  .btn-danger-quiet {
+    @apply btn-base border border-red-200 bg-white text-red-700 hover:border-red-300 hover:bg-red-50;
+  }
+  /* For the ink page masthead: primary-600 on #031927 is only 2.41:1, under the
+     3:1 WCAG minimum for a UI component boundary. White on ink is 17.9:1. */
+  .btn-on-dark {
+    @apply btn-base bg-white text-slate-900 hover:bg-slate-100;
+  }
+
+  /* Size modifier — declared after every variant so it always wins,
+     whichever variant it is combined with. */
+  .btn-sm {
+    @apply h-8 px-3 text-xs;
+  }
+
+  /* ── Form controls ───────────────────────────────────────── */
+  .input {
+    @apply block h-9 w-full border border-gray-300 bg-white px-3 text-sm text-gray-900
+           placeholder-gray-400 transition-colors
+           focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500
+           disabled:cursor-not-allowed disabled:bg-gray-50;
+    border-radius: var(--radius-control);
+  }
+  /* textarea and select share .input but must not be locked to one row's height */
+  textarea.input,
+  select[multiple].input {
+    @apply h-auto py-2;
+  }
+  .label {
+    @apply mb-1 block text-xs font-medium text-gray-700;
+  }
+
+  /* ── Containers ──────────────────────────────────────────── */
+  .card {
+    @apply border border-gray-200 bg-white;
+    border-radius: var(--radius-container);
+  }
+  /* Page masthead: a flat band, not a floating rounded block. */
+  .page-header {
+    @apply border-b border-gray-200 bg-white px-6 py-4;
+    border-radius: var(--radius-container);
+  }
+
+  /* ── Badges ──────────────────────────────────────────────── */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 text-xs font-medium;
+    border-radius: var(--radius-control);
+  }
+
+  /* ── Action bars ─────────────────────────────────────────── */
+  /* Footer of a drawer or modal. Holds Cancel/Save only — record
+     actions live in .danger-zone inside the body — but it still
+     wraps rather than overflowing if a translation runs long. */
+  .action-bar {
+    @apply flex flex-wrap items-center justify-end gap-2;
+  }
+  /* Record-level actions (terminate, delete, ...) grouped inside the
+     panel body, away from the confirm/cancel controls. */
+  .danger-zone {
+    @apply mt-6 border border-gray-200 bg-gray-50 p-4;
+    border-radius: var(--radius-container);
+  }
+  .danger-zone__title {
+    @apply mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500;
+  }
+  .danger-zone__actions {
+    @apply mt-3 flex flex-wrap gap-2;
+  }
+}

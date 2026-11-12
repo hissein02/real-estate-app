@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<style>
+  /* ── Page setup ── */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: DejaVu Sans, Arial, sans-serif;
+    font-size: 10pt;
+    color: #1f2937;
+    background: #fff;
+  }
+
+  /* ── Top accent bar ── */
+  .accent-bar {
+    height: 8px;
+    background-color: #4f46e5;
+  }
+
+  /* ── Main content ── */
+  .page {
+    padding: 36pt 48pt;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24pt;
+  }
+
+  .company-logo-box {
+    width: 44pt;
+    height: 44pt;
+    background-color: #e0e7ff;
+    border-radius: 8pt;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8pt;
+  }
+
+  .company-logo-text {
+    font-size: 20pt;
+    color: #4f46e5;
+    font-weight: bold;
+  }
+
+  .company-name {
+    font-size: 14pt;
+    font-weight: bold;
+    color: #111827;
+    margin-bottom: 4pt;
+  }
+
+  .company-detail {
+    font-size: 8pt;
+    color: #6b7280;
+    line-height: 1.5;
+  }
+
+  .invoice-header-right {
+    text-align: right;
+  }
+
+  .invoice-title {
+    font-size: 22pt;
+    font-weight: bold;
+    color: #4f46e5;
+    letter-spacing: 2pt;
+    margin-bottom: 6pt;
+  }
+
+  .invoice-number {
+    font-size: 11pt;
+    font-weight: bold;
+    color: #111827;
+    margin-bottom: 10pt;
+  }
+
+  .meta-label {
+    font-size: 7.5pt;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.5pt;
+  }
+
+  .meta-value {
+    font-size: 9pt;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .meta-row {
+    margin-bottom: 4pt;
+  }
+
+  /* ── Divider ── */
+  .divider {
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 16pt 0;
+  }
+
+  /* ── Bill-to / Period row ── */
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 24pt;
+  }
+
+  .info-block {}
+
+  .info-block-right {
+    text-align: right;
+  }
+
+  .label-sm {
+    font-size: 7.5pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5pt;
+    color: #9ca3af;
+    margin-bottom: 4pt;
+  }
+
+  .info-name {
+    font-size: 11pt;
+    font-weight: bold;
+    color: #111827;
+    margin-bottom: 2pt;
+  }
+
+  .info-sub {
+    font-size: 9pt;
+    color: #6b7280;
+    line-height: 1.5;
+  }
+
+  /* ── Line items table ── */
+  .table-wrapper {
+    margin-bottom: 20pt;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead tr {
+    border-bottom: 2px solid #e0e7ff;
+  }
+
+  th {
+    font-size: 7.5pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5pt;
+    color: #9ca3af;
+    padding: 0 0 8pt 0;
+  }
+
+  th.right { text-align: right; }
+  th.center { text-align: center; }
+  th.left { text-align: left; }
+
+  tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  tbody tr.alt {
+    background-color: #fafafa;
+  }
+
+  td {
+    padding: 9pt 0;
+    font-size: 9pt;
+    vertical-align: middle;
+  }
+
+  td.right { text-align: right; }
+  td.center { text-align: center; }
+
+  .line-desc {
+    font-weight: 600;
+    color: #111827;
+  }
+
+  .line-type {
+    font-size: 7.5pt;
+    color: #9ca3af;
+    margin-top: 2pt;
+    text-transform: capitalize;
+  }
+
+  /* ── Total ── */
+  .total-section {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20pt;
+  }
+
+  .total-box {
+    background-color: #4f46e5;
+    border-radius: 8pt;
+    padding: 10pt 20pt;
+    min-width: 160pt;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* gap not supported in WeasyPrint — use padding on children instead */
+  }
+
+  .total-label {
+    font-size: 9pt;
+    font-weight: 600;
+    color: #c7d2fe;
+    letter-spacing: 1pt;
+    text-transform: uppercase;
+  }
+
+  .total-amount {
+    font-size: 14pt;
+    font-weight: bold;
+    color: #ffffff;
+  }
+
+  /* ── Notes ── */
+  .notes-box {
+    background-color: #f9fafb;
+    border-radius: 6pt;
+    padding: 12pt;
+    margin-bottom: 20pt;
+  }
+
+  .notes-label {
+    font-size: 7.5pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5pt;
+    color: #9ca3af;
+    margin-bottom: 4pt;
+  }
+
+  .notes-text {
+    font-size: 9pt;
+    color: #4b5563;
+    line-height: 1.5;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 12pt;
+    text-align: center;
+    font-size: 7.5pt;
+    color: #9ca3af;
+    line-height: 1.8;
+  }
+
+  /* ── Status badge ── */
+  .status-badge {
+    display: inline-block;
+    padding: 2pt 8pt;
+    border-radius: 99pt;
+    font-size: 7.5pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5pt;
+  }
+
+  .status-issued    { background: #fef9c3; color: #854d0e; }
+  .status-paid      { background: #dcfce7; color: #166534; }
+  .status-overdue   { background: #fee2e2; color: #991b1b; }
+  .status-partially_paid { background: #ffedd5; color: #9a3412; }
+  .status-void      { background: #f3f4f6; color: #6b7280; }
+</style>
+</head>
+<body>
+
+<!-- Top accent bar -->
+<div class="accent-bar"></div>
+
+<div class="page">
+
+  <!-- ── Header ── -->
+  <div class="header">
+
+    <!-- Company info (left) -->
+    <div>
+      {% if company_logo_path %}
+        <img src="file://{{ company_logo_path }}" alt="Logo"
+             style="max-width: 120pt; max-height: 60pt; object-fit: contain; margin-bottom: 8pt;">
+      {% else %}
+        <div class="company-logo-box">
+          <span class="company-logo-text">&#127968;</span>
+        </div>
+      {% endif %}
+      <div class="company-name">{{ company_name }}</div>
+      <div class="company-detail">
+        {{ company_address }}<br>
+        {{ company_city }}<br>
+        {{ company_phone }}<br>
+        {{ company_email }}
+      </div>
+    </div>
+
+    <!-- Invoice info (right) -->
+    <div class="invoice-header-right">
+      <div class="invoice-title">FACTURE</div>
+      <div class="invoice-number">{{ invoice.invoice_number }}</div>
+      <div class="meta-row">
+        <div class="meta-label">Date d'émission</div>
+        <div class="meta-value">{{ issue_date }}</div>
+      </div>
+      <div class="meta-row" style="margin-top:6pt;">
+        <div class="meta-label">Échéance</div>
+        <div class="meta-value">{{ due_date }}</div>
+      </div>
+      <div style="margin-top:8pt;">
+        <span class="status-badge status-{{ invoice.status }}">{{ status_label }}</span>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="divider">
+
+  <!-- ── Bill-to / Period ── -->
+  <div class="info-row">
+    <div class="info-block">
+      <div class="label-sm">Facturé à</div>
+      <div class="info-name">{{ invoice.lease.tenant.display_name }}</div>
+      <div class="info-sub">
+        {{ invoice.lease.unit.name }}<br>
+        {{ invoice.lease.unit.building.name }}<br>
+        {{ invoice.lease.unit.building.city }}{% if invoice.lease.unit.building.address_line1 %}, {{ invoice.lease.unit.building.address_line1 }}{% endif %}
+      </div>
+    </div>
+    <div class="info-block-right">
+      <div class="label-sm">Période</div>
+      <div class="info-name">{{ period_start }} — {{ period_end }}</div>
+      {% if invoice.is_prorated %}
+      <div class="info-sub">Loyer au prorata</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── Line items ── -->
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th class="left" style="width:55%;">Description</th>
+          <th class="center" style="width:10%;">Qté</th>
+          <th class="right" style="width:17%;">Prix Unit.</th>
+          <th class="right" style="width:18%;">Montant</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in invoice.lines.all %}
+        <tr {% if forloop.counter|divisibleby:2 %}class="alt"{% endif %}>
+          <td>
+            <div class="line-desc">{{ line.description }}</div>
+            <div class="line-type">
+              {% if line.line_type == "rent" %}Loyer
+              {% elif line.line_type == "deposit" %}Dépôt de garantie
+              {% elif line.line_type == "late_fee" %}Pénalité de retard
+              {% elif line.line_type == "adjustment" %}Ajustement
+              {% else %}Autre{% endif %}
+            </div>
+          </td>
+          <td class="center">{{ line.quantity }}</td>
+          <td class="right">{{ line.unit_price|floatformat:0 }} {{ invoice.currency }}</td>
+          <td class="right" style="font-weight:600;">{{ line.amount|floatformat:0 }} {{ invoice.currency }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:16pt 0;">Aucune ligne</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Total ── -->
+  <div class="total-section">
+    <div class="total-box">
+      <span class="total-label">Total</span>
+      <span class="total-amount">{{ invoice.total_amount|floatformat:0 }} {{ invoice.currency }}</span>
+    </div>
+  </div>
+
+  <!-- ── Notes ── -->
+  {% if invoice.notes %}
+  <div class="notes-box">
+    <div class="notes-label">Notes</div>
+    <div class="notes-text">{{ invoice.notes }}</div>
+  </div>
+  {% endif %}
+
+  <!-- ── Bank details + Legal ── -->
+  {% if company_bank_accounts or company_rccm or company_nif %}
+  <div style="margin-top: 24pt; border-top: 1pt solid #e5e7eb; padding-top: 12pt;">
+    {% if company_bank_accounts %}
+    <div style="margin-bottom: 8pt;">
+      <div style="font-size: 7pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5pt; color: #9ca3af; margin-bottom: 4pt;">Coordonnées bancaires</div>
+      {% for bank in company_bank_accounts %}
+      <div style="font-size: 8pt; color: #374151;">
+        <strong>{{ bank.bank_name }}</strong> — {{ bank.account_number }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if company_rccm or company_nif %}
+    <div style="font-size: 8pt; color: #6b7280;">
+      {% if company_rccm %}RCCM : {{ company_rccm }}{% endif %}
+      {% if company_rccm and company_nif %} · {% endif %}
+      {% if company_nif %}NIF : {{ company_nif }}{% endif %}
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- ── Footer ── -->
+  <div class="footer">
+    <strong>{{ company_name }}</strong> — {{ company_address }}, {{ company_city }}<br>
+    {{ company_phone }} · {{ company_email }}<br>
+    {% if company_signatory %}{{ company_signatory }}<br>{% endif %}
+    Merci pour votre confiance.
+  </div>
+
+</div>
+</body>
+</html>
